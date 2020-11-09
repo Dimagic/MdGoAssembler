@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<AnchorPane prefHeight="320.0" prefWidth="460.0" xmlns="http://javafx.com/javafx/8.0.261" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mdgoassembler.view.SettingsViewController">
+   <children>
+      <ButtonBar layoutX="186.0" layoutY="246.0" prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="5.0">
+        <buttons>
+          <Button fx:id="save_btn" mnemonicParsing="false" onAction="#saveBtnClick" text="Save" />
+            <Button fx:id="cancel_btn" mnemonicParsing="false" onAction="#cancelBtnClick" text="Cancel">
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+            </Button>
+        </buttons>
+      </ButtonBar>
+      <TabPane layoutX="64.0" layoutY="44.0" prefHeight="310.0" prefWidth="260.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <tabs>
+          <Tab text="Settings">
+            <content>
+                  <AnchorPane prefHeight="431.0" prefWidth="451.0">
+                     <children>
+                        <TitledPane fx:id="db_pane" prefHeight="250.0" prefWidth="235.0" text="DB" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                           <content>
+                              <GridPane prefHeight="260.0" prefWidth="233.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="100.0" minWidth="10.0" prefWidth="59.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="151.0" minWidth="10.0" prefWidth="151.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                 </rowConstraints>
+                                 <children>
+                                    <Label prefHeight="20.0" text="DB addr:" />
+                                    <Label prefHeight="20.0" text="DB name:" GridPane.rowIndex="2" />
+                                    <Label prefHeight="20.0" text="User:" GridPane.rowIndex="3" />
+                                    <Label prefHeight="20.0" text="Password:" GridPane.rowIndex="4" />
+                                    <TextField fx:id="addr_db" prefWidth="150.0" GridPane.columnIndex="1">
+                                       <GridPane.margin>
+                                          <Insets bottom="3.0" />
+                                       </GridPane.margin>
+                                    </TextField>
+                                    <TextField fx:id="name_db" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                       <GridPane.margin>
+                                          <Insets bottom="3.0" />
+                                       </GridPane.margin>
+                                    </TextField>
+                                    <TextField fx:id="user_db" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                       <GridPane.margin>
+                                          <Insets bottom="3.0" />
+                                       </GridPane.margin>
+                                    </TextField>
+                                    <PasswordField fx:id="pass_db" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                       <GridPane.margin>
+                                          <Insets bottom="3.0" />
+                                       </GridPane.margin>
+                                    </PasswordField>
+                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#testDBconn" text="Test connection" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                       <GridPane.margin>
+                                          <Insets bottom="3.0" />
+                                       </GridPane.margin>
+                                    </Button>
+                                    <TextField fx:id="port_db" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <GridPane.margin>
+                                          <Insets bottom="3.0" />
+                                       </GridPane.margin>
+                                    </TextField>
+                                    <Label text="DB port:" GridPane.rowIndex="1" />
+                                 </children>
+                              </GridPane>
+                           </content>
+                           <padding>
+                              <Insets bottom="10.0" />
+                           </padding>
+                        </TitledPane>
+                        <TitledPane fx:id="printer_pane" animated="false" layoutX="250.0" layoutY="10.0" prefHeight="239.0" prefWidth="202.0" text="Printer" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                          <content>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="50.0" prefWidth="200.0">
+                                 <children>
+                                    <ComboBox fx:id="prnt_combo" layoutX="14.0" layoutY="13.0" prefHeight="25.0" prefWidth="176.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" />
+                                    <TextArea fx:id="template_area" layoutX="14.0" layoutY="46.0" prefHeight="159.0" prefWidth="175.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="40.0" />
+                                 </children>
+                              </AnchorPane>
+                          </content>
+                        </TitledPane>
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>
