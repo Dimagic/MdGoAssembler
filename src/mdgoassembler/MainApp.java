@@ -25,7 +25,7 @@ import java.util.Objects;
 
 public class MainApp extends Application {
     Logger LOGGER = LogManager.getLogger(MainApp.class.getName());
-    private final String VERSION = "0.0.3.5";
+    private final String VERSION = "0.0.3.9";
     private final Image favicon = new Image(Objects.requireNonNull(
             getClass().getClassLoader().getResourceAsStream("logo.png")));
     private RootLayoutController rootLayoutController;

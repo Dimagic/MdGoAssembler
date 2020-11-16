@@ -1,6 +1,7 @@
 package mdgoassembler.utils;
 
 import javafx.collections.ObservableList;
+import mdgoassembler.models.AssHistory;
 import mdgoassembler.models.Assembly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,8 +14,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.awt.*;
 import java.io.*;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ExcelReportGenerator {
     private static final Logger LOGGER = LogManager.getLogger(ExcelReportGenerator.class.getName());
@@ -22,6 +22,7 @@ public class ExcelReportGenerator {
     private final ObservableList<Assembly> reportData;
     private final String start;
     private final String stop;
+    private XSSFWorkbook workbook;
     private Map<String, CellStyle> styles;
     private Cell cell;
 
@@ -33,7 +34,7 @@ public class ExcelReportGenerator {
     }
 
     public boolean assemblyReportToExcell() {
-        XSSFWorkbook workbook = new XSSFWorkbook();
+        workbook = new XSSFWorkbook();
         String TITLE = "MdGo production report";
         String reportFolder = "./Reports/";
         String fileName = "MdGo_report.xlsx";
@@ -41,10 +42,11 @@ public class ExcelReportGenerator {
         styles = createStyles(workbook);
 
         String[] titles = {"No", "Product P/N", "PCBA S/N", "SIM ICCID", "SIM PIN", "AWS ID", "Firmware",
-                "Burn date", "Test1 date", "Test2 date","Base side sticker QR", "Assembly date"};
+                "Burn date", "Test1 date", "Test2 date","Modem", "Storage",
+                "Base side sticker QR", "Assembly date", "History"};
 
-        /**
-         * create the report head
+        /*
+          create the report head
          */
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, titles.length-1));
         sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, titles.length-1));
@@ -58,8 +60,8 @@ public class ExcelReportGenerator {
         cell.setCellStyle(styles.get("reportHeader"));
 
 
-        /**
-         * create the header row
+        /*
+          create the header row
          */
         int headerRowNum = 3;
         Row headerRow = sheet.createRow(headerRowNum);
@@ -70,57 +72,38 @@ public class ExcelReportGenerator {
             cell.setCellStyle(styles.get("tableTitle"));
         }
 
-        /**
-         * filling report data
+        /*
+          filling report data
          */
         int dataRowNum = headerRowNum;
         Row dataRow;
-        String currArticle;
-        Map<String, Integer> summaryData = new HashMap<String, Integer>();
         for (Assembly assembly : reportData) {
             dataRowNum += 1;
             dataRow = sheet.createRow(dataRowNum);
 
-            setDataCell(dataRow, "dataCell_center", Integer.toString(dataRowNum - headerRowNum));
-            setDataCell(dataRow, "dataCell_center", assembly.getProduct().getName());
-            setDataCell(dataRow, "dataCell_center", assembly.getBoardSn());
-            setDataCell(dataRow, "dataCell_center", assembly.getSimSn());
-            setDataCell(dataRow, "dataCell_center", assembly.getSimPin());
-            setDataCell(dataRow, "dataCell_center", assembly.getQrAwsId());
-            setDataCell(dataRow, "dataCell_center", assembly.getQrFw());
-            setDataCell(dataRow, "dataCell_center", assembly.getStringQrBurnDate());
-            setDataCell(dataRow, "dataCell_center", assembly.getStringQrTest1Date());
-            setDataCell(dataRow, "dataCell_center", assembly.getStringQrTest2Date());
-            setDataCell(dataRow, "dataCell_center", assembly.getCaseSn());
-            setDataCell(dataRow, "dataCell_center", assembly.getStringAssemblyDate());
-        }
+            setDataCell(dataRow, Integer.toString(dataRowNum - headerRowNum));
+            setDataCell(dataRow, assembly.getProduct().getName());
+            setDataCell(dataRow, assembly.getBoardSn());
+            setDataCell(dataRow, assembly.getSimSn());
+            setDataCell(dataRow, assembly.getSimPin());
+            setDataCell(dataRow, assembly.getQrAwsId());
+            setDataCell(dataRow, assembly.getQrFw());
+            setDataCell(dataRow, assembly.getStringQrBurnDate());
+            setDataCell(dataRow, assembly.getStringQrTest1Date());
+            setDataCell(dataRow, assembly.getStringQrTest2Date());
+            setDataCell(dataRow, assembly.getQrModem());
+            setDataCell(dataRow, assembly.getQrStorage());
+            setDataCell(dataRow, assembly.getCaseSn());
+            setDataCell(dataRow, assembly.getStringAssemblyDate());
 
-        /**
-         * filling report statistic by article
-         */
-//        int lastRow = sheet.getLastRowNum() + 2;
-//        dataRow = sheet.createRow(lastRow);
-//        setDataCell(dataRow, "tableTitle", "Systems statistic");
-//        setDataCell(dataRow, "tableTitle", "");
-//        sheet.addMergedRegion(new CellRangeAddress(lastRow, lastRow, 0, 1));
-//        dataRow = sheet.createRow(lastRow + 1);
-//        setDataCell(dataRow, "tableTitle", "Article");
-//        setDataCell(dataRow, "tableTitle", "Count");
-//
-//        dataRowNum = sheet.getLastRowNum();
-//        int total = 0;
-//        List<String> keyList = new ArrayList<String>(summaryData.keySet());
-//        Collections.sort(keyList);
-//        for (String key: keyList){
-//            dataRowNum += 1;
-//            dataRow = sheet.createRow(dataRowNum);
-//            setDataCell(dataRow, "dataCell_center", key);
-//            setDataCell(dataRow, "dataCell_center", Integer.toString(summaryData.get(key)));
-//            total = total + summaryData.get(key);
-//        }
-//        dataRow = sheet.createRow(dataRowNum + 1);
-//        setDataCell(dataRow, "dataCell_right_bold", "Total:");
-//        setDataCell(dataRow, "tableTitle", Integer.toString(total));
+            Set<AssHistory> historySet = assembly.getHistory();
+            if (historySet.size() != 0){
+                addHistorySheet(assembly.getBoardSn(), historySet);
+                setHyperLink(dataRow, assembly.getBoardSn());
+            } else {
+                setDataCell(dataRow, "");
+            }
+        }
 
         for (int j = 0; j < titles.length; j++) {
             sheet.autoSizeColumn(j);
@@ -144,7 +127,7 @@ public class ExcelReportGenerator {
         return true;
     }
 
-    private void setDataCell(Row dataRow, String style, String value){
+    private void setDataCell(Row dataRow, String value){
         int cellNum = dataRow.getFirstCellNum();
         if (cellNum == -1){
             cellNum = 0;
@@ -152,11 +135,76 @@ public class ExcelReportGenerator {
             cellNum = dataRow.getLastCellNum();
         }
         cell = dataRow.createCell(cellNum);
-        cell.setCellStyle(styles.get(style));
+        cell.setCellStyle(styles.get("dataCell_center"));
         cell.setCellValue(value);
     }
 
-    /**
+    private void setHyperLink(Row dataRow, String value){
+        int cellNum = dataRow.getFirstCellNum();
+        if (cellNum == -1){
+            cellNum = 0;
+        } else {
+            cellNum = dataRow.getLastCellNum();
+        }
+        cell = dataRow.createCell(cellNum);
+        cell.setCellValue("View");
+        Hyperlink link = workbook.getCreationHelper().createHyperlink(Hyperlink.LINK_DOCUMENT);
+        link.setAddress(String.format("'%s'!A1", value));
+        cell.setHyperlink(link);
+        cell.setCellStyle(styles.get("hyperlink"));
+    }
+
+    private void addHistorySheet(String boardSn, Set<AssHistory> historySet){
+        XSSFSheet sheet = workbook.createSheet(boardSn);
+        String TITLE = String.format("Board SN: %s history report", boardSn);
+        String[] titles = {"Date", "Field", "Old value", "New value"};
+
+        /*
+          create the history head
+         */
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, titles.length-1));
+        sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, titles.length-1));
+        Row reportNameRow = sheet.createRow(0);
+        cell = reportNameRow.createCell(0);
+        cell.setCellValue(TITLE);
+        cell.setCellStyle(styles.get("reportHeader"));
+
+        /*
+          create the header row
+         */
+        int headerRowNum = 2;
+        Row headerRow = sheet.createRow(headerRowNum);
+        headerRow.setHeightInPoints(12.75f);
+
+        LinkedList<AssHistory> sortedHistory = new LinkedList<>(historySet);
+        Collections.sort(sortedHistory);
+        for (int i = 0; i < titles.length; i++) {
+            cell = headerRow.createCell(i);
+            cell.setCellValue(titles[i]);
+            cell.setCellStyle(styles.get("tableTitle"));
+        }
+
+        /*
+          filling history data
+         */
+        int dataRowNum = headerRowNum;
+        Row dataRow;
+        for (AssHistory history : sortedHistory) {
+            dataRowNum += 1;
+            dataRow = sheet.createRow(dataRowNum);
+
+            setDataCell(dataRow, Utils.getFormattedDate(history.getDate()));
+            setDataCell(dataRow, history.getFieldChange());
+            setDataCell(dataRow, history.getOldValue());
+            setDataCell(dataRow, history.getNewValue());
+        }
+
+        for (int j = 0; j < titles.length; j++) {
+            sheet.autoSizeColumn(j);
+        }
+    }
+
+    /*
      * create a library of cell styles
      */
     private Map<String, CellStyle> createStyles(Workbook wb){
@@ -194,6 +242,14 @@ public class ExcelReportGenerator {
         style.setFont(font);
         styles.put("dataCell_right_bold", style);
 
+        font = wb.createFont();
+        font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+        font.setColor(IndexedColors.BLUE.getIndex());
+        style = createBorderedStyle(wb);
+        style.setAlignment(CellStyle.ALIGN_CENTER);
+        style.setFont(font);
+        styles.put("hyperlink", style);
+
         return styles;
     }
 
@@ -212,38 +268,5 @@ public class ExcelReportGenerator {
         style.setTopBorderColor(black);
         return style;
     }
-
-    public boolean isOfficeInstalled(){
-        try {
-            Process p = Runtime.getRuntime().exec
-                    (new String [] { "cmd.exe", "/c", "assoc", ".xls"});
-            BufferedReader input =
-                    new BufferedReader
-                            (new InputStreamReader(p.getInputStream()));
-            String extensionType = input.readLine();
-            input.close();
-            // extract type
-            if (extensionType == null) {
-                return false;
-            }
-            String fileType[] = extensionType.split("=");
-
-            p = Runtime.getRuntime().exec
-                    (new String [] { "cmd.exe", "/c", "ftype", fileType[1]});
-            input =
-                    new BufferedReader
-                            (new InputStreamReader(p.getInputStream()));
-            String fileAssociation = input.readLine();
-            // extract path
-//            String officePath = fileAssociation.split("=")[1];
-            return true;
-        }
-        catch (Exception e) {
-            LOGGER.error(e);
-            MsgBox.msgException(e);
-        }
-        return false;
-    }
-
 }
 

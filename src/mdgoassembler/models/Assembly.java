@@ -15,7 +15,7 @@ public class Assembly {
     }
 
     public Assembly(Product product, String boardSn, String simSn, String simPin, String qrId, String qrFw,
-                    Date qrBurnDate, Date qrTest1Date, Date qrTest2Date) {
+                    Date qrBurnDate, Date qrTest1Date, Date qrTest2Date, String qrModem, String qrStorage) {
         this.testDate = new Date();
         this.product = product;
         this.boardSn = boardSn;
@@ -26,6 +26,8 @@ public class Assembly {
         this.qrBurnDate = qrBurnDate;
         this.qrTest1Date = qrTest1Date;
         this.qrTest2Date = qrTest2Date;
+        this.qrModem = qrModem;
+        this.qrStorage = qrStorage;
     }
 
     @Id
@@ -49,8 +51,7 @@ public class Assembly {
         return testDate;
     }
 
-//    @Column(name = "productpn", length = 15, nullable = false)
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne
     private Product product;
 
     public Product getProduct() {
@@ -121,7 +122,7 @@ public class Assembly {
         this.caseSn = caseSn;
     }
 
-    @Column(name = "qrawsid", length = 30, nullable = false)
+    @Column(name = "qrawsid", length = 64, nullable = false, unique = true)
     private String qrAwsId;
 
     @Column(name = "qrfw", length = 30, nullable = false)
@@ -138,6 +139,12 @@ public class Assembly {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "qrtest2date", nullable = false)
     private Date qrTest2Date;
+
+    @Column(name = "qrmodem", length = 30, nullable = false)
+    private String qrModem;
+
+    @Column(name = "qrstorage", length = 30, nullable = false)
+    private String qrStorage;
 
     @Column
     @ElementCollection(targetClass = Long.class)
@@ -210,6 +217,22 @@ public class Assembly {
 
     public void setQrTest2Date(Date qrTest2Date) {
         this.qrTest2Date = qrTest2Date;
+    }
+
+    public String getQrModem() {
+        return qrModem;
+    }
+
+    public void setQrModem(String qrModem) {
+        this.qrModem = qrModem;
+    }
+
+    public String getQrStorage() {
+        return qrStorage;
+    }
+
+    public void setQrStorage(String qrStorage) {
+        this.qrStorage = qrStorage;
     }
 
     public List<String> getListForFilter(){

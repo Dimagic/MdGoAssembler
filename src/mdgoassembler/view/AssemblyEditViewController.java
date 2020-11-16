@@ -63,6 +63,10 @@ public class AssemblyEditViewController {
     @FXML
     private TextField test2Date;
     @FXML
+    private TextField modem;
+    @FXML
+    private TextField storage;
+    @FXML
     private TextField caseSn;
     @FXML
     private TextField assemblyDate;
@@ -90,6 +94,8 @@ public class AssemblyEditViewController {
         burnDate.setText(Utils.getFormattedDate(assembly.getQrBurnDate()));
         test1Date.setText(Utils.getFormattedDate(assembly.getQrTest1Date()));
         test2Date.setText(Utils.getFormattedDate(assembly.getQrTest2Date()));
+        modem.setText(assembly.getQrModem());
+        storage.setText(assembly.getQrStorage());
         caseSn.setText(assembly.getCaseSn());
         try {
             assemblyDate.setText(Utils.getFormattedDate(assembly.getAssemblyDate()));
@@ -114,9 +120,11 @@ public class AssemblyEditViewController {
             }
             if (!simSn.getText().equalsIgnoreCase(sn)) {
                 simSn.setText(sn);
+                assemblyDate.setText(Utils.getFormattedDate(new Date()));
             }
             if (!simPin.getText().equalsIgnoreCase(pin)) {
                 simPin.setText(pin);
+                assemblyDate.setText(Utils.getFormattedDate(new Date()));
             }
         } catch (IndexOutOfBoundsException e) {
             MsgBox.msgWarning("Incorrect SIM card barcode");
@@ -131,8 +139,8 @@ public class AssemblyEditViewController {
             return;
         }
         Map<String, String> qrMap = Utils.qrCsvToMap(testQr);
-        // Checking if was scan correct QR code, where 5 is numbers of items
-        if (qrMap != null && qrMap.size() == 5) {
+        // Checking if was scan correct QR code, where 7 is numbers of items
+        if (qrMap != null && qrMap.size() == 7) {
             qrMap.keySet().forEach(c -> {
                 if (qrMap.get(c) == null) {
                     MsgBox.msgWarning("Incorrect test QR code");
@@ -148,6 +156,9 @@ public class AssemblyEditViewController {
         burnDate.setText(Utils.getFormattedDate(stringToDate(qrMap.get("Burn"))));
         test1Date.setText(Utils.getFormattedDate(stringToDate(qrMap.get("Test1"))));
         test2Date.setText(Utils.getFormattedDate(stringToDate(qrMap.get("Test2"))));
+        modem.setText(qrMap.get("Modem"));
+        storage.setText(qrMap.get("Storage"));
+        assemblyDate.setText(Utils.getFormattedDate(new Date()));
     }
 
     @FXML
@@ -172,6 +183,8 @@ public class AssemblyEditViewController {
             assembly.setQrBurnDate(Utils.stringToDate(burnDate.getText()));
             assembly.setQrTest1Date(Utils.stringToDate(test1Date.getText()));
             assembly.setQrTest2Date(Utils.stringToDate(test2Date.getText()));
+            assembly.setQrModem(modem.getText());
+            assembly.setQrStorage(storage.getText());
             assembly.setCaseSn(caseSn.getText());
             assembly.setAssemblyDate(!assemblyDate.getText().equals("") ?
                     Utils.stringToDate(assemblyDate.getText()): null);

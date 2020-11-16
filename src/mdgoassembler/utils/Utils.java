@@ -58,8 +58,7 @@ public class Utils implements MsgBox{
         try {
             SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String s = val.replaceAll("[a-zA-Z]", " ");
-            Date date = dt.parse(s);
-            return date;
+            return dt.parse(s);
         } catch (ParseException e) {
             LOGGER.error("Exceprion", e);
             MsgBox.msgException(e);
@@ -89,7 +88,7 @@ public class Utils implements MsgBox{
     }
 
     public static Map<String, String> qrCsvToMap(String csvString) {
-        String line = "";
+        String line;
         String cvsSplitBy = ",";
         Map<String, String> importingData = new HashMap<>();
         Reader inputString = new StringReader(csvString);
@@ -98,8 +97,8 @@ public class Utils implements MsgBox{
             while ((line = br.readLine()) != null) {
                 String[] tmp = line.split(cvsSplitBy);
                 for(String s: tmp){
-                    String key = s.split(":\\s")[0];
-                    String val = s.split(":\\s")[1];
+                    String key = s.split(":\\s")[0].trim();
+                    String val = s.split(":\\s")[1].trim();
                     importingData.put(key, val);
                 }
             }
@@ -112,8 +111,11 @@ public class Utils implements MsgBox{
     }
 
     public static boolean isPrintingAvailable(){
-        return Objects.requireNonNull(getSettings()).getPrnt_combo() != null &&
-                checkTemplate(getSettings().getTemplate_area());
+        if (getSettings().getPrnt_combo() == null || getSettings().getTemplate_area() == null){
+            return false;
+        } else {
+            return checkTemplate(getSettings().getTemplate_area());
+        }
     }
 
     public static boolean checkTemplate(String template){

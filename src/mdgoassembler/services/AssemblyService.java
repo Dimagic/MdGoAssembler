@@ -42,6 +42,10 @@ public class AssemblyService {
         return dao.findByCase(caseSn);
     }
 
+    public Assembly findByAws(String aws) throws CustomException {
+        return dao.findByAws(aws);
+    }
+
     public List<Assembly> getAssemblyAfterTest() throws CustomException {
         return dao.getAssemblyAfterTest();
     }

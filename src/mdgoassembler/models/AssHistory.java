@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "AssHistory")
-public class AssHistory {
+public class AssHistory implements Comparable<AssHistory>{
 
     public AssHistory() {
     }
@@ -131,5 +131,10 @@ public class AssHistory {
                 ", oldValue='" + oldValue + '\'' +
                 ", newValue='" + newValue + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(AssHistory assHistory) {
+        return date.compareTo(assHistory.getDate());
     }
 }

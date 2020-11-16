@@ -61,6 +61,20 @@ public class AssemblyDao implements UniversalDao{
         }
     }
 
+    public Assembly findByAws(String aws) throws CustomException {
+        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        try {
+            Assembly assembly = (Assembly) session.createSQLQuery(
+                    "SELECT * FROM public.assembly WHERE qrawsid = :aws")
+                    .addEntity(Assembly.class)
+                    .setParameter("aws", aws).getSingleResult();
+            session.close();
+            return assembly;
+        } catch (NoResultException e){
+            return null;
+        }
+    }
+
     public List<Assembly> getAssemblyAfterTest() throws CustomException{
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
         List list = session.createSQLQuery("SELECT * FROM public.assembly WHERE casesn is null")

@@ -1,19 +1,25 @@
 package mdgoassembler.view;
 
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import mdgoassembler.MainApp;
 import mdgoassembler.utils.*;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 
+import javax.imageio.ImageIO;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -152,6 +158,14 @@ public class SettingsViewController implements MsgBox {
 
 				}
 
+//				String zplString = template_area.getText().replace("<SN>", "1234567890");
+//				File outputfile = new File("image.jpg");
+//				try {
+//					ImageIO.write(generateQRCodeImage(zplString), "jpg", outputfile);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+
 				/**
 				 * Write settings to the currentSettings in MainApp.
 				 */
@@ -210,6 +224,4 @@ public class SettingsViewController implements MsgBox {
 	public void setDialogStage(Stage dialogStage) {
     	this.dialogStage = dialogStage;
     }
-
-
 }

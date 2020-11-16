@@ -73,6 +73,12 @@ public class AssemblyViewController implements MsgBox {
     private CheckBox prntLabelCheck;
     @FXML
     private Label productBoxLbl;
+    @FXML
+    private Label toWorkLbl;
+    @FXML
+    private Label completeLbl;
+    @FXML
+    private Label totalLbl;
 
 
     @FXML
@@ -146,12 +152,8 @@ public class AssemblyViewController implements MsgBox {
         });
 
         prntLabelCheck.setDisable(!Utils.isPrintingAvailable());
-//        statImg.setOnMouseEntered((event) -> {
-//            test();
-//        });
-//        statImg.setOnMouseExited((event) -> {
-//            statisticStage.close();
-//        });
+
+        tAssembly.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         initDate();
         fillTable();
@@ -168,7 +170,7 @@ public class AssemblyViewController implements MsgBox {
 
     private void addTestColumnTab(String label, String dataIndex) {
         TableColumn<Assembly, String> column = new TableColumn<>(label);
-        column.prefWidthProperty().bind(tAssembly.widthProperty().divide(10));
+        column.prefWidthProperty().bind(tAssembly.widthProperty().divide(12));
         column.setCellValueFactory(
                 (TableColumn.CellDataFeatures<Assembly, String> param) -> {
                     ObservableValue<String> result = new ReadOnlyStringWrapper("");
@@ -189,12 +191,7 @@ public class AssemblyViewController implements MsgBox {
                 Assembly assembly = (Assembly) getTableRow().getItem();
                 final ContextMenu menu = new ContextMenu();
                 MenuItem mDeleteItem = new MenuItem("Delete item");
-                mDeleteItem.setOnAction((e -> {
-                    String q = String.format("Delete assembly SN: %s\nAre you sure?", assembly.getBoardSn());
-                    if (MsgBox.msgConfirm(q)) {
-                        deleteAssembly(assembly);
-                    }
-                }));
+                mDeleteItem.setOnAction((e -> deleteAssembly()));
                 menu.getItems().add(mDeleteItem);
                 setContextMenu(menu);
                 getContextMenu().setAutoHide(true);
@@ -233,12 +230,7 @@ public class AssemblyViewController implements MsgBox {
                 }
 
                 MenuItem mDeleteItem = new MenuItem("Delete item");
-                mDeleteItem.setOnAction((e -> {
-                    String q = String.format("Delete assembly SN: %s\nAre you sure?", assembly.getBoardSn());
-                    if (MsgBox.msgConfirm(q)) {
-                        deleteAssembly(assembly);
-                    }
-                }));
+                mDeleteItem.setOnAction((e -> deleteAssembly()));
                 menu.getItems().add(mDeleteItem);
 
                 setContextMenu(menu);
@@ -249,12 +241,17 @@ public class AssemblyViewController implements MsgBox {
         tAssembly.getColumns().add(column);
     }
 
-    private void deleteAssembly(Assembly assembly) {
+    private void deleteAssembly() {
+        if (!MsgBox.msgConfirm("Delete assembly selected? Are you sure?")){
+            return;
+        }
         String pass = MsgBox.msgInputPassword("Enter password for delete");
         if (pass != null) {
-            if (pass.equals(String.format("%s%s", assembly.getSimPin(), Utils.getMinutesNow()))) {
+            if (pass.equals("MdGo2020")) {
                 try {
-                    assemblyService.deleteAssembly(assembly);
+                    for (Assembly assembly: tAssembly.getSelectionModel().getSelectedItems()){
+                        assemblyService.deleteAssembly(assembly);
+                    }
                     fillTable();
                     MsgBox.msgInfo("Delete complete");
                 } catch (CustomException ex) {
@@ -337,8 +334,14 @@ public class AssemblyViewController implements MsgBox {
         }
 
         String testQr = checkInput(patternQr, MsgBox.msgInputString("Test QR code:"));
+        if (testQr == null){
+            return;
+        }
         Map<String, String> qrMap = Utils.qrCsvToMap(testQr);
         if (qrMap != null) {
+            if (isAwsPresent(qrMap.get("Id"))){
+                return;
+            }
             qrMap.keySet().forEach(c -> {
                 if (qrMap.get(c) == null) {
                     MsgBox.msgWarning("Incorrect test QR code");
@@ -354,7 +357,7 @@ public class AssemblyViewController implements MsgBox {
             Date test1 = Utils.stringToDate(qrMap.get("Test1"));
             Date test2 = Utils.stringToDate(qrMap.get("Test2"));
             Assembly assembly = new Assembly(product, boardSn, simSn, simPin, qrMap.get("Id"), qrMap.get("FW"),
-                    burn, test1, test2);
+                    burn, test1, test2, qrMap.get("Modem"), qrMap.get("Storage"));
             assemblyService.saveAssembly(assembly);
             fillTable();
         } catch (CustomException e) {
@@ -438,11 +441,12 @@ public class AssemblyViewController implements MsgBox {
 
     private boolean isSimPresent(String val) {
         try {
-            boolean b = assemblyService.findBySim(val) == null;
-            if (b) {
+            Assembly assembly = assemblyService.findBySim(val);
+            if (assembly == null) {
                 return false;
             } else {
-                MsgBox.msgInfo(String.format("Sim card SN: %s already present", val));
+                MsgBox.msgInfo(String.format("SIM card ID: %s\n" +
+                        "already used on board SN: %s", val, assembly.getBoardSn()));
                 return true;
             }
         } catch (CustomException e) {
@@ -454,11 +458,12 @@ public class AssemblyViewController implements MsgBox {
 
     private boolean isCasePresent(String val) {
         try {
-            boolean b = assemblyService.findByCase(val) == null;
-            if (b) {
+            Assembly assembly = assemblyService.findByCase(val);
+            if (assembly == null) {
                 return false;
             } else {
-                MsgBox.msgInfo(String.format("Case SN: %s already present", val));
+                MsgBox.msgInfo(String.format("Case SN: %s\n" +
+                        "already used with board SN: %s", val, assembly.getBoardSn()));
                 return true;
             }
         } catch (CustomException e) {
@@ -468,15 +473,32 @@ public class AssemblyViewController implements MsgBox {
         return false;
     }
 
-    private void fillStatistic() {
-//        try {
-//            toWorkLbl.setText(String.valueOf(assemblyService.getIncompleteCount()));
-//            completeLbl.setText(String.valueOf(assemblyService.getCompleteCount()));
-//            totalLbl.setText(String.valueOf(assemblyService.getTotalCount()));
-//        } catch (CustomException e) {
-//            LOGGER.error("Exception", e);
-//            MsgBox.msgException(e);
-//        }
+    private boolean isAwsPresent(String aws){
+        try {
+            Assembly assembly = assemblyService.findByAws(aws);
+            if (assembly == null) {
+                return false;
+            } else {
+                MsgBox.msgInfo(String.format("AWS ID: %s\n" +
+                        "already used on board SN: %s", aws, assembly.getBoardSn()));
+                return true;
+            }
+        } catch (CustomException e) {
+            LOGGER.error("Exception", e);
+            MsgBox.msgException(e);
+        }
+        return false;
+    }
+
+    private void fillStatistic(){
+        try {
+            toWorkLbl.setText(String.valueOf(assemblyService.getIncompleteCount()));
+            completeLbl.setText(String.valueOf(assemblyService.getCompleteCount()));
+            totalLbl.setText(String.valueOf(assemblyService.getTotalCount()));
+        } catch (CustomException e) {
+            LOGGER.error(e);
+            MsgBox.msgException(e);
+        }
     }
 
     @FXML
@@ -519,6 +541,8 @@ public class AssemblyViewController implements MsgBox {
                 addTestColumnTab("Burn date", "getStringQrBurnDate");
                 addTestColumnTab("Test1 date", "getStringQrTest1Date");
                 addTestColumnTab("Test2 date", "getStringQrTest2Date");
+                addTestColumnTab("Modem", "getQrModem");
+                addTestColumnTab("Storage", "getQrStorage");
                 addTestColumnTab("Has history", "");
                 fillTable();
                 break;
